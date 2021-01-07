@@ -1,20 +1,12 @@
-"use strict";
+'use strict';
 
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
-
-function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var _ = require('lodash');
 
@@ -24,120 +16,106 @@ var _require = require('./utils'),
 var _require2 = require('./errors'),
     GoogleSpreadsheetFormulaError = _require2.GoogleSpreadsheetFormulaError;
 
-var GoogleSpreadsheetCell = /*#__PURE__*/function () {
+var GoogleSpreadsheetCell = function () {
   function GoogleSpreadsheetCell(parentSheet, rowIndex, columnIndex, cellData) {
     _classCallCheck(this, GoogleSpreadsheetCell);
 
     this._sheet = parentSheet; // the parent GoogleSpreadsheetWorksheet instance
-
     this._row = rowIndex;
     this._column = columnIndex;
 
     this._updateRawData(cellData);
-
     return this;
-  } // newData can be undefined/null if the cell is totally empty and unformatted
+  }
+
+  // newData can be undefined/null if the cell is totally empty and unformatted
 
 
   _createClass(GoogleSpreadsheetCell, [{
-    key: "_updateRawData",
+    key: '_updateRawData',
     value: function _updateRawData() {
       var newData = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
       this._rawData = newData;
       this._draftData = {}; // stuff to save
-
       this._error = null;
-
       if (_.get(this._rawData, 'effectiveValue.errorValue')) {
         this._error = new GoogleSpreadsheetFormulaError(this._rawData.effectiveValue.errorValue);
       }
-    } // CELL LOCATION/ADDRESS /////////////////////////////////////////////////////////////////////////
+    }
+
+    // CELL LOCATION/ADDRESS /////////////////////////////////////////////////////////////////////////
 
   }, {
-    key: "_getFormatParam",
+    key: '_getFormatParam',
     value: function _getFormatParam(param) {
       // we freeze the object so users don't change nested props accidentally
       // TODO: figure out something that would throw an error if you try to update it?
-      if (_.get(this._draftData, "userEnteredFormat.".concat(param))) {
+      if (_.get(this._draftData, 'userEnteredFormat.' + param)) {
         throw new Error('User format is unsaved - save the cell to be able to read it again');
       }
-
       return Object.freeze(this._rawData.userEnteredFormat[param]);
     }
   }, {
-    key: "_setFormatParam",
+    key: '_setFormatParam',
     value: function _setFormatParam(param, newVal) {
-      if (_.isEqual(newVal, _.get(this._rawData, "userEnteredFormat.".concat(param)))) {
-        _.unset(this._draftData, "userEnteredFormat.".concat(param));
+      if (_.isEqual(newVal, _.get(this._rawData, 'userEnteredFormat.' + param))) {
+        _.unset(this._draftData, 'userEnteredFormat.' + param);
       } else {
-        _.set(this._draftData, "userEnteredFormat.".concat(param), newVal);
-
+        _.set(this._draftData, 'userEnteredFormat.' + param, newVal);
         this._draftData.clearFormat = false;
       }
-    } // format getters
+    }
+
+    // format getters
 
   }, {
-    key: "clearAllFormatting",
+    key: 'clearAllFormatting',
     value: function clearAllFormatting() {
       // need to track this separately since by setting/unsetting things, we may end up with
       // this._draftData.userEnteredFormat as an empty object, but not an intent to clear it
       this._draftData.clearFormat = true;
       delete this._draftData.userEnteredFormat;
-    } // SAVING + UTILS ////////////////////////////////////////////////////////////////////////////////
+    }
+
+    // SAVING + UTILS ////////////////////////////////////////////////////////////////////////////////
+
     // returns true if there are any updates that have not been saved yet
 
   }, {
-    key: "discardUnsavedChanges",
+    key: 'discardUnsavedChanges',
     value: function discardUnsavedChanges() {
       this._draftData = {};
     }
   }, {
-    key: "save",
-    value: function () {
-      var _save = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-        return regeneratorRuntime.wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                _context.next = 2;
-                return this._sheet.saveUpdatedCells([this]);
+    key: 'save',
+    value: async function save() {
+      await this._sheet.saveUpdatedCells([this]);
+    }
 
-              case 2:
-              case "end":
-                return _context.stop();
-            }
-          }
-        }, _callee, this);
-      }));
-
-      function save() {
-        return _save.apply(this, arguments);
-      }
-
-      return save;
-    }() // used by worksheet when saving cells
+    // used by worksheet when saving cells
     // returns an individual batchUpdate request to update the cell
 
   }, {
-    key: "_getUpdateRequest",
+    key: '_getUpdateRequest',
     value: function _getUpdateRequest() {
       // this logic should match the _isDirty logic above
       // but we need it broken up to build the request below
       var isValueUpdated = this._draftData.value !== undefined;
       var isNoteUpdated = this._draftData.note !== undefined;
       var isFormatUpdated = !!_.keys(this._draftData.userEnteredFormat || {}).length;
-      var isFormatCleared = this._draftData.clearFormat; // if no updates, we return null, which we can filter out later before sending requests
+      var isFormatCleared = this._draftData.clearFormat;
 
+      // if no updates, we return null, which we can filter out later before sending requests
       if (!_.some([isValueUpdated, isNoteUpdated, isFormatUpdated, isFormatCleared])) {
         return null;
-      } // build up the formatting object, which has some quirks...
+      }
 
-
-      var format = _objectSpread(_objectSpread({}, this._rawData.userEnteredFormat), this._draftData.userEnteredFormat); // if background color already set, cell has backgroundColor and backgroundColorStyle
+      // build up the formatting object, which has some quirks...
+      var format = _extends({}, this._rawData.userEnteredFormat, this._draftData.userEnteredFormat);
+      // if background color already set, cell has backgroundColor and backgroundColorStyle
       // but backgroundColorStyle takes precendence so we must remove to set the color
       // see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#CellFormat
-
-
       if (_.get(this._draftData, 'userEnteredFormat.backgroundColor')) {
         delete format.backgroundColorStyle;
       }
@@ -145,13 +123,13 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       return {
         updateCells: {
           rows: [{
-            values: [_objectSpread(_objectSpread(_objectSpread(_objectSpread({}, isValueUpdated && {
+            values: [_extends({}, isValueUpdated && {
               userEnteredValue: _defineProperty({}, this._draftData.valueType, this._draftData.value)
-            }), isNoteUpdated && {
+            }, isNoteUpdated && {
               note: this._draftData.note
-            }), isFormatUpdated && {
+            }, isFormatUpdated && {
               userEnteredFormat: format
-            }), isFormatCleared && {
+            }, isFormatCleared && {
               userEnteredFormat: {}
             })]
           }],
@@ -170,34 +148,36 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       };
     }
   }, {
-    key: "rowIndex",
+    key: 'rowIndex',
     get: function get() {
       return this._row;
     }
   }, {
-    key: "columnIndex",
+    key: 'columnIndex',
     get: function get() {
       return this._column;
     }
   }, {
-    key: "a1Column",
+    key: 'a1Column',
     get: function get() {
       return columnToLetter(this._column + 1);
     }
   }, {
-    key: "a1Row",
+    key: 'a1Row',
     get: function get() {
       return this._row + 1;
     } // a1 row numbers start at 1 instead of 0
 
   }, {
-    key: "a1Address",
+    key: 'a1Address',
     get: function get() {
-      return "".concat(this.a1Column).concat(this.a1Row);
-    } // CELL CONTENTS - VALUE/FORMULA/NOTES ///////////////////////////////////////////////////////////
+      return '' + this.a1Column + this.a1Row;
+    }
+
+    // CELL CONTENTS - VALUE/FORMULA/NOTES ///////////////////////////////////////////////////////////
 
   }, {
-    key: "value",
+    key: 'value',
     get: function get() {
       // const typeKey = _.keys(this._rawData.effectiveValue)[0];
       if (this._draftData.value !== undefined) throw new Error('Value has been changed');
@@ -219,11 +199,10 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       } else {
         throw new Error('Set value to boolean, string, or number');
       }
-
       this._draftData.value = newValue;
     }
   }, {
-    key: "valueType",
+    key: 'valueType',
     get: function get() {
       // an error only happens with a formula
       if (this._error) return 'errorValue';
@@ -231,7 +210,7 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       return _.keys(this._rawData.effectiveValue)[0];
     }
   }, {
-    key: "formattedValue",
+    key: 'formattedValue',
     get: function get() {
       return this._rawData.formattedValue || null;
     },
@@ -239,7 +218,7 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       throw new Error('You cannot modify the formatted value directly');
     }
   }, {
-    key: "formula",
+    key: 'formula',
     get: function get() {
       return _.get(this._rawData, 'userEnteredValue.formulaValue', null);
     },
@@ -248,12 +227,12 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       this.value = newValue; // use existing value setter
     }
   }, {
-    key: "formulaError",
+    key: 'formulaError',
     get: function get() {
       return this._error;
     }
   }, {
-    key: "hyperlink",
+    key: 'hyperlink',
     get: function get() {
       if (this._draftData.value) throw new Error('Save cell to be able to read hyperlink');
       return this._rawData.hyperlink;
@@ -262,7 +241,7 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       throw new Error('Do not set hyperlink directly. Instead set cell.formula, for example `cell.formula = \'=HYPERLINK("http://google.com", "Google")\'`');
     }
   }, {
-    key: "note",
+    key: 'note',
     get: function get() {
       return this._draftData.note !== undefined ? this._draftData.note : this._rawData.note;
     },
@@ -270,10 +249,12 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       if (newVal === null || newVal === undefined) newVal = '';
       if (!_.isString(newVal)) throw new Error('Note must be a string');
       if (newVal === this._rawData.note) delete this._draftData.note;else this._draftData.note = newVal;
-    } // CELL FORMATTING ///////////////////////////////////////////////////////////////////////////////
+    }
+
+    // CELL FORMATTING ///////////////////////////////////////////////////////////////////////////////
 
   }, {
-    key: "userEnteredFormat",
+    key: 'userEnteredFormat',
     get: function get() {
       return this._rawData.userEnteredFormat;
     },
@@ -281,7 +262,7 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       throw new Error('Do not modify directly, instead use format properties');
     }
   }, {
-    key: "effectiveFormat",
+    key: 'effectiveFormat',
     get: function get() {
       return this._rawData.effectiveFormat;
     },
@@ -289,16 +270,18 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       throw new Error('Read-only');
     }
   }, {
-    key: "numberFormat",
+    key: 'numberFormat',
     get: function get() {
       return this._getFormatParam('numberFormat');
     },
+
+
     // format setters
     set: function set(newVal) {
       return this._setFormatParam('numberFormat', newVal);
     }
   }, {
-    key: "backgroundColor",
+    key: 'backgroundColor',
     get: function get() {
       return this._getFormatParam('backgroundColor');
     },
@@ -306,7 +289,7 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       return this._setFormatParam('backgroundColor', newVal);
     }
   }, {
-    key: "borders",
+    key: 'borders',
     get: function get() {
       return this._getFormatParam('borders');
     },
@@ -314,7 +297,7 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       return this._setFormatParam('borders', newVal);
     }
   }, {
-    key: "padding",
+    key: 'padding',
     get: function get() {
       return this._getFormatParam('padding');
     },
@@ -322,7 +305,7 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       return this._setFormatParam('padding', newVal);
     }
   }, {
-    key: "horizontalAlignment",
+    key: 'horizontalAlignment',
     get: function get() {
       return this._getFormatParam('horizontalAlignment');
     },
@@ -330,7 +313,7 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       return this._setFormatParam('horizontalAlignment', newVal);
     }
   }, {
-    key: "verticalAlignment",
+    key: 'verticalAlignment',
     get: function get() {
       return this._getFormatParam('verticalAlignment');
     },
@@ -338,7 +321,7 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       return this._setFormatParam('verticalAlignment', newVal);
     }
   }, {
-    key: "wrapStrategy",
+    key: 'wrapStrategy',
     get: function get() {
       return this._getFormatParam('wrapStrategy');
     },
@@ -346,7 +329,7 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       return this._setFormatParam('wrapStrategy', newVal);
     }
   }, {
-    key: "textDirection",
+    key: 'textDirection',
     get: function get() {
       return this._getFormatParam('textDirection');
     },
@@ -354,7 +337,7 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       return this._setFormatParam('textDirection', newVal);
     }
   }, {
-    key: "textFormat",
+    key: 'textFormat',
     get: function get() {
       return this._getFormatParam('textFormat');
     },
@@ -362,7 +345,7 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       return this._setFormatParam('textFormat', newVal);
     }
   }, {
-    key: "hyperlinkDisplayType",
+    key: 'hyperlinkDisplayType',
     get: function get() {
       return this._getFormatParam('hyperlinkDisplayType');
     },
@@ -370,7 +353,7 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       return this._setFormatParam('hyperlinkDisplayType', newVal);
     }
   }, {
-    key: "textRotation",
+    key: 'textRotation',
     get: function get() {
       return this._getFormatParam('textRotation');
     },
@@ -378,7 +361,7 @@ var GoogleSpreadsheetCell = /*#__PURE__*/function () {
       return this._setFormatParam('textRotation', newVal);
     }
   }, {
-    key: "_isDirty",
+    key: '_isDirty',
     get: function get() {
       // have to be careful about checking undefined rather than falsy
       // in case a new value is empty string or 0 or false
